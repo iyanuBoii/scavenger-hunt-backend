@@ -1,7 +1,8 @@
-import { Controller, Post, Get, Patch, Param, Body } from '@nestjs/common';
+import { Controller, Post, Get, Patch, Param, Body, Query } from '@nestjs/common';
 import { ContributionsService } from './contribution.service';
 import { CreateContributionDto } from './dto/create-contribution.dto';
 import { UpdateStatusDto } from './dto/update-status.dto';
+import { QueryContributionDto } from './dto/query-contribution.dto';
 
 @Controller('contributions')
 export class ContributionsController {
@@ -13,8 +14,8 @@ export class ContributionsController {
   }
 
   @Get('pending')
-  getPending() {
-    return this.service.getPending();
+  getPending(@Query() query: QueryContributionDto) {
+    return this.service.getPending(query);
   }
 
   @Patch(':id/status')

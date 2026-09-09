@@ -3,6 +3,15 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Contribution } from './entities/contribution.entity';
 import { Repository } from 'typeorm';
 import { CreateContributionDto } from './dto/create-contribution.dto';
+import { QueryContributionDto } from './dto/query-contribution.dto';
+
+export interface PaginatedContributions {
+  items: Contribution[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
 
 @Injectable()
 export class ContributionsService {
@@ -16,8 +25,24 @@ export class ContributionsService {
     return this.repo.save(contribution);
   }
 
-  async getPending() {
-    return this.repo.find({ where: { status: 'pending' } });
+  async getPending(query: QueryContributionDto = {}): Promise<PaginatedContributions> {
+    const { page = 1, limit = 10 } = query;
+    const skip = (page - 1) * limit;
+
+    const [items, total] = await this.repo.findAndCount({
+      where: { status: 'pending' },
+      order: { submittedAt: 'DESC' },
+      skip,
+      take: limit,
+    });
+
+    return {
+      items,
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+    };
   }
 
   async updateStatus(id: string, status: 'approved' | 'rejected') {
