@@ -3,12 +3,13 @@ import { ErrorReportService } from './error-report.service';
 import { CreateErrorReportDto } from './dto/create-error-report.dto';
 import { ErrorReportResponseDto } from './dto/error-report-response.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { ErrorReportRateLimitGuard } from './guards/error-report-rate-limit.guard';
 
 @Controller('error-reports')
 export class ErrorReportController {
   constructor(private readonly errorReportService: ErrorReportService) {}
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, ErrorReportRateLimitGuard)
   @Post()
   async submitReport(@Request() req, @Body() dto: CreateErrorReportDto): Promise<ErrorReportResponseDto> {
     return this.errorReportService.submitReport(req.user.id, dto);
