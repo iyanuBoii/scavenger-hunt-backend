@@ -5,8 +5,12 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { PuzzleDifficultyStat } from './entities/puzzle-difficulty-stat.entity';
 
+const STATS_CACHE_TTL_MS = 30_000;
+
 @Injectable()
 export class PuzzleDifficultyStatsService {
+  private statsCache: { data: PuzzleDifficultyStat[]; expiresAt: number } | null = null;
+
   constructor(
     @InjectRepository(PuzzleDifficultyStat)
     private readonly statsRepository: Repository<PuzzleDifficultyStat>,
@@ -29,15 +33,26 @@ export class PuzzleDifficultyStatsService {
       stat = this.statsRepository.create({ difficultyLevel, solveCount: 1 });
     }
 
-    return this.statsRepository.save(stat);
+    const saved = await this.statsRepository.save(stat);
+    // The stats this endpoint reports have changed; invalidate the cache
+    // rather than waiting out the TTL.
+    this.statsCache = null;
+    return saved;
   }
 
   /**
-   * Finds all puzzle difficulty statistics.
+   * Finds all puzzle difficulty statistics, served from a short-lived
+   * in-memory cache to reduce database load from frequent polling.
    * @returns An array of all stats.
    */
-  findAll(): Promise<PuzzleDifficultyStat[]> {
-    return this.statsRepository.find();
+  async findAll(): Promise<PuzzleDifficultyStat[]> {
+    if (this.statsCache && this.statsCache.expiresAt > Date.now()) {
+      return this.statsCache.data;
+    }
+
+    const data = await this.statsRepository.find();
+    this.statsCache = { data, expiresAt: Date.now() + STATS_CACHE_TTL_MS };
+    return data;
   }
 
   /**
