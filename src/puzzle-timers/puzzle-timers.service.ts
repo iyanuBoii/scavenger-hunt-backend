@@ -1,11 +1,26 @@
 // src/puzzle-timers/puzzle-timers.service.ts
 
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CreatePuzzleTimerDto } from './dto/create-puzzle-timer.dto';
 import { UpdatePuzzleTimerDto } from './dto/update-puzzle-timer.dto';
 import { PuzzleTimer } from './entities/puzzle-timer.entity';
+
+export function assertValidTimerRange(startTime: Date, endTime: Date): void {
+  if (Number.isNaN(startTime.getTime()) || Number.isNaN(endTime.getTime())) {
+    throw new BadRequestException('startTime and endTime must be valid dates.');
+  }
+  if (endTime.getTime() <= startTime.getTime()) {
+    throw new BadRequestException(
+      'endTime must be strictly after startTime (timer duration cannot be negative or zero).',
+    );
+  }
+}
 
 @Injectable()
 export class PuzzleTimersService {
@@ -14,11 +29,15 @@ export class PuzzleTimersService {
     private readonly timerRepository: Repository<PuzzleTimer>,
   ) {}
 
-  create(createPuzzleTimerDto: CreatePuzzleTimerDto): Promise<PuzzleTimer> {
+  async create(createPuzzleTimerDto: CreatePuzzleTimerDto): Promise<PuzzleTimer> {
+    const startTime = new Date(createPuzzleTimerDto.startTime);
+    const endTime = new Date(createPuzzleTimerDto.endTime);
+    assertValidTimerRange(startTime, endTime);
+
     const timer = this.timerRepository.create({
       ...createPuzzleTimerDto,
-      startTime: new Date(createPuzzleTimerDto.startTime),
-      endTime: new Date(createPuzzleTimerDto.endTime),
+      startTime,
+      endTime,
     });
     return this.timerRepository.save(timer);
   }
@@ -54,6 +73,7 @@ export class PuzzleTimersService {
     if (!timer) {
       throw new NotFoundException(`Timer with ID "${id}" not found`);
     }
+    assertValidTimerRange(timer.startTime, timer.endTime);
     return this.timerRepository.save(timer);
   }
 
