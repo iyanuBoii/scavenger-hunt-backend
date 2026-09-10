@@ -18,11 +18,13 @@ import { ReviewsModule } from './reviews/reviews.module';
 import { ClaimHistoryModule } from './claim-history/claim-history.module';
 import { StarknetNewsModule } from './starknet-news/starknet-news.module';
 import { EventAnnouncementsModule } from './event-announcements/event-announcements.module';
+import { validateEnv } from './config/env.validation';
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: `.env.${process.env.NODE_ENV || 'development'}`,
+      validate: validateEnv,
     }),
     ServeStaticModule.forRoot({
       rootPath: join(__dirname, '..', 'uploads'),
