@@ -1,6 +1,7 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import * as fs from 'fs';
 import { GlobalExceptionFilter } from './common/filters/http-exception.filter';
 import type { Request, Response, NextFunction } from 'express';
@@ -37,6 +38,18 @@ async function bootstrap() {
   );
 
   app.useGlobalFilters(new GlobalExceptionFilter());
+
+  const swaggerConfig = new DocumentBuilder()
+    .setTitle('Scavenger Hunt Backend API')
+    .setDescription('API documentation for the scavenger hunt backend, covering auth, user and progress endpoints')
+    .setVersion('1.0')
+    .addBearerAuth()
+    .addTag('auth')
+    .addTag('users')
+    .addTag('progress')
+    .build();
+  const swaggerDocument = SwaggerModule.createDocument(app, swaggerConfig);
+  SwaggerModule.setup('api/docs', app, swaggerDocument);
 
   await app.listen(process.env.PORT ?? 5000);
 }
