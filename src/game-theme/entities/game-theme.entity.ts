@@ -22,4 +22,7 @@ export class Theme {
 
   @Column({ type: 'varchar', length: 255, nullable: true })
   brandingText: string;
+
+  @Column({ type: 'boolean', default: true })
+  isActive: boolean;
 }

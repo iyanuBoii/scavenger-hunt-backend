@@ -1,6 +1,10 @@
-import { IsString, IsOptional, IsHexColor, IsUrl } from 'class-validator';
+import { IsString, IsOptional, IsHexColor, IsUrl, IsBoolean } from 'class-validator';
 
 export class CreateThemeDto {
+  @IsBoolean()
+  @IsOptional()
+  isActive?: boolean;
+
   @IsHexColor()
   @IsOptional()
   primaryColor?: string;

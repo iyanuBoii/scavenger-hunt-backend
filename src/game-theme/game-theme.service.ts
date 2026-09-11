@@ -22,7 +22,13 @@ export class ThemeService {
   }
 
   async createTheme(createThemeDto: CreateThemeDto): Promise<Theme> {
-    const theme = this.themeRepository.create(createThemeDto);
+    if (createThemeDto.isActive !== false) {
+      await this.deactivateAllThemes();
+    }
+    const theme = this.themeRepository.create({
+      ...createThemeDto,
+      isActive: createThemeDto.isActive ?? true,
+    });
     return this.themeRepository.save(theme);
   }
 
@@ -32,7 +38,15 @@ export class ThemeService {
       throw new NotFoundException('Theme configuration not found');
     }
 
+    if (updateThemeDto.isActive === true && !theme.isActive) {
+      await this.deactivateAllThemes();
+    }
+
     Object.assign(theme, updateThemeDto);
     return this.themeRepository.save(theme);
+  }
+
+  private async deactivateAllThemes(): Promise<void> {
+    await this.themeRepository.update({ isActive: true }, { isActive: false });
   }
 }
