@@ -48,4 +48,25 @@ describe('ThemeService', () => {
       }
     });
   });
+
+  describe('updateTheme (single active theme)', () => {
+    it('deactivates the previously active theme when activating a new one', async () => {
+      const existing = new Theme();
+      existing.id = 1;
+      existing.isActive = false;
+      jest.spyOn(repository, 'findOne').mockResolvedValue(existing);
+      const updateSpy = jest
+        .spyOn(repository, 'update')
+        .mockResolvedValue({} as any);
+      jest.spyOn(repository, 'save').mockImplementation(async (t) => t as Theme);
+
+      const result = await service.updateTheme({ isActive: true });
+
+      expect(updateSpy).toHaveBeenCalledWith(
+        { isActive: true },
+        { isActive: false },
+      );
+      expect(result.isActive).toBe(true);
+    });
+  });
 });
