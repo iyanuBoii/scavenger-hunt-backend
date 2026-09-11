@@ -52,4 +52,20 @@ export class StarknetQuizService {
     await this.quizRepository.remove(quiz);
     return { id, message: 'Successfully deleted quiz question.' };
   }
+
+  /**
+   * Scores a set of submitted answers against the quiz bank.
+   * Pure function: no DB access, so it is unit-testable in isolation.
+   */
+  static scoreSubmission(
+    quizzes: Pick<StarknetQuiz, 'id' | 'correctAnswer'>[],
+    submittedAnswers: Record<string, string>,
+  ): { total: number; correct: number; scorePercentage: number } {
+    const total = quizzes.length;
+    const correct = quizzes.filter(
+      (quiz) => submittedAnswers[quiz.id] === quiz.correctAnswer,
+    ).length;
+    const scorePercentage = total === 0 ? 0 : Math.round((correct / total) * 100);
+    return { total, correct, scorePercentage };
+  }
 }
