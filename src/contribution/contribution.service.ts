@@ -52,4 +52,15 @@ export class ContributionsService {
     item.status = status;
     return this.repo.save(item);
   }
+
+  // Score a contribution from its description: a 10-point base award plus
+  // 1 point per word, so an empty/whitespace-only description scores 0.
+  calculateScore(contribution: Pick<Contribution, 'description'>): number {
+    const wordCount = (contribution?.description ?? '')
+      .trim()
+      .split(/\s+/)
+      .filter(Boolean).length;
+
+    return wordCount === 0 ? 0 : 10 + wordCount;
+  }
 }
