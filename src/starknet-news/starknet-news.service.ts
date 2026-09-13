@@ -231,25 +231,29 @@ export class StarknetNewsService {
         queryBuilder.orderBy(`news.${sortField}`, sortOrder);
       }
 
+      // Defensive re-validation in case findAll() is invoked directly with an unvalidated query object
+      const safePage = Math.max(1, Number(page) || 1);
+      const safeLimit = Math.min(100, Math.max(1, Number(limit) || 10));
+
       // Apply pagination
-      const skip = (page - 1) * limit;
-      queryBuilder.skip(skip).take(limit);
+      const skip = (safePage - 1) * safeLimit;
+      queryBuilder.skip(skip).take(safeLimit);
 
       const [data, total] = await queryBuilder.getManyAndCount();
-      const totalPages = Math.ceil(total / limit);
+      const totalPages = Math.ceil(total / safeLimit);
 
       this.logger.log(
-        `Retrieved ${data.length} news articles (page ${page}/${totalPages})`,
+        `Retrieved ${data.length} news articles (page ${safePage}/${totalPages})`,
       );
 
       return {
         data,
         total,
-        page,
-        limit,
+        page: safePage,
+        limit: safeLimit,
         totalPages,
-        hasNext: page < totalPages,
-        hasPrevious: page > 1,
+        hasNext: safePage < totalPages,
+        hasPrevious: safePage > 1,
       };
     } catch (error) {
       this.logger.error(
