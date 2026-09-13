@@ -307,20 +307,24 @@ export class EventAnnouncementsService {
       // Add secondary sorting
       queryBuilder.addOrderBy('announcement.createdAt', 'DESC');
 
+      // Defensive re-validation in case findAll() is invoked directly with an unvalidated query object
+      const safePage = Math.max(1, Number(page) || 1);
+      const safeLimit = Math.min(100, Math.max(1, Number(limit) || 10));
+
       // Pagination
-      const offset = (page - 1) * limit;
-      queryBuilder.skip(offset).take(limit);
+      const offset = (safePage - 1) * safeLimit;
+      queryBuilder.skip(offset).take(safeLimit);
 
       const [data, total] = await queryBuilder.getManyAndCount();
 
       const result = {
         data,
         total,
-        page,
-        limit,
-        totalPages: Math.ceil(total / limit),
-        hasNext: page * limit < total,
-        hasPrevious: page > 1,
+        page: safePage,
+        limit: safeLimit,
+        totalPages: Math.ceil(total / safeLimit),
+        hasNext: safePage * safeLimit < total,
+        hasPrevious: safePage > 1,
       };
 
       // Cache the result
