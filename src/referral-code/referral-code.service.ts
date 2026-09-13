@@ -27,6 +27,9 @@ export class ReferralCodeService {
     if (!referralCode) {
       throw new NotFoundException('Referral code not found');
     }
+    if (referralCode.ownerId === trackDto.invitedUserId) {
+      throw new BadRequestException('You cannot use your own referral code');
+    }
     referralCode.usageCount += 1;
     return this.referralCodeRepository.save(referralCode);
   }
