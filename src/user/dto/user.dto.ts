@@ -1,7 +1,11 @@
 import { IsString, IsOptional, MinLength, MaxLength, Matches, IsUrl } from "class-validator"
+import { Transform } from "class-transformer"
+
+const trim = ({ value }: { value: unknown }) => (typeof value === "string" ? value.trim() : value)
 
 export class UpdateProfileDto {
   @IsOptional()
+  @Transform(trim)
   @IsString()
   @MinLength(3, { message: "Username must be at least 3 characters long" })
   @MaxLength(30, { message: "Username must not exceed 30 characters" })
@@ -11,6 +15,7 @@ export class UpdateProfileDto {
   username?: string
 
   @IsOptional()
+  @Transform(trim)
   @IsString()
   @MaxLength(500, { message: "Bio must not exceed 500 characters" })
   bio?: string
