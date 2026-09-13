@@ -110,18 +110,22 @@ import {
           break;
       }
   
+      // Defensive re-validation in case findAll() is invoked directly with an unvalidated query object
+      const safePage = Math.max(1, Number(page) || 1);
+      const safeLimit = Math.min(100, Math.max(1, Number(limit) || 10));
+
       // Apply pagination
-      const skip = (page - 1) * limit;
-      queryBuilder.skip(skip).take(limit);
-  
+      const skip = (safePage - 1) * safeLimit;
+      queryBuilder.skip(skip).take(safeLimit);
+
       const [claims, total] = await queryBuilder.getManyAndCount();
-  
+
       return {
         claims,
         total,
-        page,
-        limit,
-        totalPages: Math.ceil(total / limit),
+        page: safePage,
+        limit: safeLimit,
+        totalPages: Math.ceil(total / safeLimit),
       };
     }
   
